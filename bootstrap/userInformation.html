@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorator="layouts/base">
+<head>
+<meta charset="UTF-8"></meta>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>ユーザー情報編集</title>
+<link href="css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div layout:fragment="content">
+	<div class="container" style="padding: 20px 0">
+		<h1 th:text="${username}"></h1>
+		
+		<form action="/user" method="POST" class="formhorizental">
+		
+			<div class="form-group">
+				<label for="favoriteArtist" class="col-sm-2 control-label">好きなアーティスト：</label>
+				<div class="col-sm-4">
+					<input type="text" name="favoriteArtist" class="form-control" id="favoriteArtist" placeholder="好きなアーティスト"></input>
+				</div>
+			</div>
+			<br></br>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-2">
+					<input type="submit" value="変更" class="btn btn-primary"></input>
+				</div>
+			</div>
+		</form>
+		<br></br>
+		<div class="col-sm-offset-1">
+			<a href="main">mainに戻る</a>
+		</div>
+	</div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+</body>
+</html>

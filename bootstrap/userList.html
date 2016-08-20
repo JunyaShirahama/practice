@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorator="layouts/base">
+<head>
+<meta charset="UTF-8"></meta>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>ユーザー一覧</title>
+<link href="css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div layout:fragment="content">
+	<div class="container" style="padding: 20px 0">
+
+		<h1>ユーザーの一覧</h1>
+		<div>
+			<a href="main">mainに戻る</a>
+		</div>
+
+		<div id="app">
+			<div class="container" style="padding: 20px, 10px">
+		      <table class="table table-striped table-borderd table-hover">
+		        <thead>
+		          <tr><th class="col-sm-2">ユーザー名</th><th></th></tr>
+		        </thead>
+		        <tbody>
+		          <template v-for="user in result.list">
+		            <tr>
+		            <input class="jsc-user-id" type="hidden" name="user_id" value="{{ user.id }}" />
+		              <td>{{ user.username }}</td>
+		              <td v-if="!user.following"><button class="jsc-follow" v-on:click="follow($index)">フォローする</button></td>
+		              <td v-if="user.following">フォローしました</td>
+		            </tr>
+		          </template>
+		        </tbody>
+		      </table>
+    		</div>
+			<button v-if="result.existsNextPage" v-on:click="nextPage()" value="もっと見る">もっと見る</button>
+		</div>
+		<script>
+			new Vue(
+					{
+						el : '#app',
+						data : {
+							result : {
+								list : [],
+								existsNextPage : true
+							}
+						},
+						created : function() {
+							var that = this;
+							$.ajax({
+										type : "GET",
+										url : "/users",
+										dataType : "json",
+										success : function(result) {
+											that.result.list = result.data;
+											that.result.currentPageNumber = result.currentPageNumber;
+											that.result.existsNextPage = result.existsNextPage;
+										}
+									});
+						},
+						methods : {
+							follow : function(index) {
+								var that = this;
+								var id = that.result.list[index].id;
+								var data = {
+									followingUserId : id
+								};
+								$.ajax({
+											type : "POST",
+											url : "/follows",
+											contentType : 'application/json',
+											data : JSON.stringify(data),
+											dataType : "text",
+											success : function(data) {
+												that.result.list[index].following = true;
+											},
+											error : function(xhr, ajaxOptions,
+													thrownError) {
+											}
+								});
+							},
+						nextPage : function() {
+							var that = this;
+							$.ajax({
+										type : "GET",
+										url : "/users?p=" + (that.result.currentPageNumber+1),
+										dataType : "json",
+										success : function(result) {
+											for (var index in result.data){
+												that.result.list.push(result.data[index]);
+											}
+											that.result.currentPageNumber = result.currentPageNumber;
+											that.result.existsNextPage = result.existsNextPage;
+										}
+									});
+						}
+					}
+				})
+		</script>
+	</div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+</body>
+</html>

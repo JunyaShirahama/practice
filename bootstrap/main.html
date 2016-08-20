@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorator="layouts/base">
+<head>
+	<meta charset="UTF-8"></meta>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>メイン画面</title>
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div layout:fragment="content">
+	<div class="container" style="padding: 20px 0">
+		<h1 th:text="${msg}">ようこそ</h1>
+
+		<div style="padding-left: 20px">
+			<p><a href="/userinformation"><i class="glyphicon glyphicon-user"></i> ユーザー情報の編集へ</a></p>
+			<p><a href="/userlist"><i class="glyphicon glyphicon-th-list"></i> ユーザーの一覧へ</a></p>
+			<form action="/logout" method="POST">
+				<input type="submit" value="ログアウト" class="btn btn-info"></input>
+			</form>
+		</div>
+		<br></br>
+
+		<div id="app">
+			<input type="hidden" th:value="${username}" v-model="tweetName"/>
+			<input type="hidden" th:value="${favoriteArtist}" v-model="favoriteArtist"/>
+			<div>
+				<textarea cols="70" rows="2" name="tweet" v-model="tweetText">{{ tweetText }}</textarea>
+			</div>
+			<div>
+				<button type="button" class="jsc-tweet" v-on:click="tweet()">ツイート</button>
+			</div>
+			<br></br>
+			<p>お気に入りのアーティスト</p>
+			<div class="container">
+			<iframe v-if="loaded" id="ytplayer" type="text/html" width="720" height="405" frameborder="0" src="{{ youtubeUrl }}"></iframe>
+			</div>
+
+			<div class="container" style="padding: 20px, 10px">
+			    <table class="table table-striped table-borderd table-hover">
+			      <thead>
+			        <tr><th class="col-sm-2">ユーザー名</th><th>ツイート</th></tr>
+			      </thead>
+			      <tbody>
+			      	<template v-for="tweet in result.list">
+				        <tr><td class="info">{{ tweet.userName }}</td><td>{{ tweet.contents }}</td></tr>
+				        <tr><td>{{ tweet.userName }}</td><td>{{ tweet.contents }}</td></tr>
+				        <tr><td>{{ tweet.userName }}</td><td>{{ tweet.contents }}</td></tr>
+			      	</template>
+			      </tbody>
+			    </table>
+		    </div>
+
+			<button v-if="result.existsNextPage" v-on:click="nextPage()" value="もっと見る" class="btn btn-primary">もっと見る</button>
+		</div>
+		<script>
+			new Vue({
+				el : '#app',
+				data : {
+					result : {
+						list : [],
+						existsNextPage : true,
+					},
+					tweetText : "",
+					tweetName : "",
+					favoriteArtist : "",
+					loaded : false,
+					youtubeUrl : ""
+				},
+				created : function() {
+					var that = this;
+					$.ajax({
+						type : "GET",
+						url : "/tweets",
+						dataType : "json",
+						success : function(list) {
+							that.result.list = list.data;
+							that.result.currentPageNumber = list.currentPageNumber;
+							that.result.existsNextPage = list.existsNextPage;
+						}
+					});
+					setTimeout(function(){
+						$.ajax({
+							type : "GET",
+							data: {
+								"part" : "id",				
+								"q" : that.favoriteArtist,
+								"type" : "video",
+								"key" : "AIzaSyA9vSmQ5Y0qXHtllPeZmmVHJjhNgOHS7N8"
+							},
+							url : "https://www.googleapis.com/youtube/v3/search",
+							dataType : "json",
+							success : function(result) {
+								var youtubeUrl = "https://www.youtube.com/embed/";
+								youtubeUrl = youtubeUrl + result.items[0].id.videoId;
+								that.youtubeUrl = youtubeUrl;
+								that.loaded = true;
+							}
+						});
+					}, 500);
+				},
+				methods : {
+					nextPage : function() {
+						var that = this;
+						$.ajax({
+							type : "GET",
+							url : "/tweets?p=" + (that.result.currentPageNumber+1),
+							dataType : "json",
+							success : function(list) {
+								for (var index in list.data){
+									that.result.list.push(list.data[index]);
+								}
+								that.result.currentPageNumber = list.currentPageNumber;
+								that.result.existsNextPage = list.existsNextPage;
+							}
+						});
+					},
+					tweet : function() {
+						var that = this;
+						if (that.tweetText.length > 140) {
+							alert("140文字以下でツイートしてください");
+							return;
+						}
+						var data = {
+								contents : that.tweetText
+						};
+						$.ajax({
+							type : "POST",
+							url : "/tweets",
+							contentType : 'application/json',
+							data : JSON.stringify(data),
+							//dataType : "text",
+							success : function(tweetData) {
+								var tweet = { "userName" : that.tweetName, "contents" : that.tweetText};
+								that.result.list.unshift(tweet);
+								that.tweetText = "";
+								alert("ツイートしました");
+							},
+							error : function(xhr, ajaxOption, thrownError) {
+								alert("error");
+							}
+						});
+					}
+				}
+			});
+		</script>
+	</div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+</body>
+</html>
