@@ -9,3 +9,4 @@ fast forwardさせたい
 
 ブランチtaskAでの記述
 もっと修正
+stashでもしようかな
